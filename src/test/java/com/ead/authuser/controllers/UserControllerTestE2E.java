@@ -8,10 +8,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -83,6 +84,40 @@ public class UserControllerTestE2E {
         assertEquals("username", user.getUsername());
         assertEquals("ACTIVE", user.getUserStatus().name());
         assertEquals("STUDENT", user.getUserType().name());
+    }
+
+    @Test
+    void shouldUpdateUserSuccessfully() {
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("fullName", "updated full name");
+        updates.put("cpf", "1234567890");
+        updates.put("phoneNumber", "1234567890");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(updates, headers);
+
+        ResponseEntity<UserModel> response = restTemplate.exchange("/users/" + savedUser.getUserId(), HttpMethod.PUT, requestEntity, UserModel.class);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+
+        UserModel updatedUser = response.getBody();
+
+        assertNotNull(updatedUser.getUserId());
+        assertEquals(updatedUser.getUserId(), savedUser.getUserId());
+        assertEquals(updates.get("fullName"), updatedUser.getFullName());
+        assertEquals(updates.get("cpf"), updatedUser.getCpf());
+        assertEquals(updates.get("phoneNumber"), updatedUser.getPhoneNumber());
+
+        Optional<UserModel> fromDb = userRepository.findById(savedUser.getUserId());
+        assertTrue(fromDb.isPresent());
+        UserModel dbUser = fromDb.get();
+        assertEquals(updates.get("fullName"), dbUser.getFullName());
+        assertEquals(updates.get("cpf"), dbUser.getCpf());
+        assertEquals(updates.get("phoneNumber"), dbUser.getPhoneNumber());
+
     }
 
 
