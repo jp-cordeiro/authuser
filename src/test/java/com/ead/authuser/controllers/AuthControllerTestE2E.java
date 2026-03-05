@@ -176,4 +176,23 @@ class AuthControllerTestE2E {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
     }
+
+    @Test
+    void shouldReturnErrorWithInvalidUsername() {
+        UserDto dto = new UserDto();
+        dto.setUsername("user name");
+        dto.setEmail("invalid-email");
+        dto.setPassword("123456");
+        dto.setFullName("teste");
+
+        ResponseEntity<Object> response =
+                restTemplate.postForEntity(
+                        "/auth/signup",
+                        dto,
+                        Object.class
+                );
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
 }
