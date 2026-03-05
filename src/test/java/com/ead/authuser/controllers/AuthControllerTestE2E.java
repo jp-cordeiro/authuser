@@ -121,4 +121,59 @@ class AuthControllerTestE2E {
 
         userRepository.deleteById(existingUser.getUserId());
     }
+
+    @Test
+    void shouldReturnErrorWhithouUsername() {
+        UserDto dto = new UserDto();
+        dto.setEmail("teste@email.com");
+        dto.setPassword("123456");
+        dto.setFullName("teste");
+
+        ResponseEntity<UserModel> response =
+                restTemplate.postForEntity(
+                        "/auth/signup",
+                        dto,
+                        UserModel.class
+                );
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    void shouldReturnErrorWhithouEmail() {
+        UserDto dto = new UserDto();
+        dto.setUsername("username");
+        dto.setPassword("123456");
+        dto.setFullName("teste");
+
+        ResponseEntity<Object> response =
+                restTemplate.postForEntity(
+                        "/auth/signup",
+                        dto,
+                        Object.class
+                );
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    void shouldReturnErrorWithInvalidEmail() {
+        UserDto dto = new UserDto();
+        dto.setUsername("username");
+        dto.setEmail("invalid-email");
+        dto.setPassword("123456");
+        dto.setFullName("teste");
+
+        ResponseEntity<Object> response =
+                restTemplate.postForEntity(
+                        "/auth/signup",
+                        dto,
+                        Object.class
+                );
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
 }
