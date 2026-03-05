@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.test.context.ActiveProfiles;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -55,20 +56,31 @@ public class UserControllerTestE2E {
 
     @Test
     void shouldGetUserListSuccessfully() {
-        ResponseEntity<UserModel[]> response = restTemplate.getForEntity("/users", UserModel[].class);
+
+        ResponseEntity<JsonNode> response =
+                restTemplate.getForEntity("/users?page=0&size=10", JsonNode.class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
 
-        UserModel[] users = response.getBody();
-        assertEquals(1, users.length);
+        JsonNode body = response.getBody();
 
-        UserModel createdUser = users[0];
+        // valida metadados da paginação
+        assertEquals(1, body.get("totalElements").asInt());
+        assertEquals(1, body.get("totalPages").asInt());
+        assertEquals(0, body.get("number").asInt());
+        assertEquals(10, body.get("size").asInt());
 
-        assertNotNull(createdUser.getUserId());
-        assertEquals("username", createdUser.getUsername());
-        assertEquals("ACTIVE", createdUser.getUserStatus().name());
-        assertEquals("STUDENT", createdUser.getUserType().name());
+        // valida conteúdo
+        JsonNode content = body.get("content");
+        assertEquals(1, content.size());
+
+        JsonNode createdUser = content.get(0);
+
+        assertNotNull(createdUser.get("userId"));
+        assertEquals("username", createdUser.get("username").asText());
+        assertEquals("ACTIVE", createdUser.get("userStatus").asText());
+        assertEquals("STUDENT", createdUser.get("userType").asText());
     }
 
     @Test
